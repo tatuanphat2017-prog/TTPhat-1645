@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rail Fence Cipher</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        h1 { text-align: center; font-weight: bold; }
+        h2 { color: #1a6bbf; font-size: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        label { display: block; margin: 10px 0 4px; }
+        input[type="text"], input[type="number"] {
+            width: 100%; padding: 8px; box-sizing: border-box;
+            border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;
+        }
+        input[readonly] { background: #f0f0f0; }
+        button {
+            margin-top: 10px; padding: 8px 20px;
+            background: #1a6bbf; color: white;
+            border: none; border-radius: 4px;
+            font-size: 1rem; cursor: pointer;
+        }
+        button:hover { background: #155a9e; }
+        .section { margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <h1>RAIL FENCE CIPHER</h1>
+
+    <div class="section">
+        <h2>ENCRYPTION</h2>
+        <label>Plain text:</label>
+        <input type="text" id="encryptPlain" placeholder="Input Plain Text">
+        <label>Rails:</label>
+        <input type="number" id="encryptRails" placeholder="Input number of rails" min="2" value="3">
+        <button onclick="encryptRailFence()">Encrypt</button>
+        <label>Result:</label>
+        <input type="text" id="encryptResult" readonly placeholder="Encrypted text will appear here">
+    </div>
+
+    <div class="section">
+        <h2>DECRYPTION</h2>
+        <label>Cipher text:</label>
+        <input type="text" id="decryptCipher" placeholder="Input Cipher Text">
+        <label>Rails:</label>
+        <input type="number" id="decryptRails" placeholder="Input number of rails" min="2" value="3">
+        <button onclick="decryptRailFence()">Decrypt</button>
+        <label>Result:</label>
+        <input type="text" id="decryptResult" readonly placeholder="Decrypted text will appear here">
+    </div>
+
+    <script>
+        function railFenceEncrypt(text, rails) {
+            if (rails < 2) return 'Invalid rails';
+            let fence = Array.from({length: rails}, () => []);
+            let rail = 0, dir = 1;
+            for (let c of text) {
+                fence[rail].push(c);
+                if (rail === 0) dir = 1;
+                else if (rail === rails - 1) dir = -1;
+                rail += dir;
+            }
+            return fence.map(r => r.join('')).join('');
+        }
+        function railFenceDecrypt(text, rails) {
+            if (rails < 2) return 'Invalid rails';
+            let n = text.length;
+            let pattern = [];
+            let rail = 0, dir = 1;
+            for (let i = 0; i < n; i++) {
+                pattern.push(rail);
+                if (rail === 0) dir = 1;
+                else if (rail === rails - 1) dir = -1;
+                rail += dir;
+            }
+            let indices = pattern.map((r, i) => [r, i]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+            let result = new Array(n);
+            for (let i = 0; i < n; i++) result[indices[i][1]] = text[i];
+            return result.join('');
+        }
+        function encryptRailFence() {
+            const plain = document.getElementById('encryptPlain').value;
+            const rails = parseInt(document.getElementById('encryptRails').value);
+            document.getElementById('encryptResult').value = railFenceEncrypt(plain, rails);
+        }
+        function decryptRailFence() {
+            const cipher = document.getElementById('decryptCipher').value;
+            const rails = parseInt(document.getElementById('decryptRails').value);
+            document.getElementById('decryptResult').value = railFenceDecrypt(cipher, rails);
+        }
+    </script>
+</body>
+</html>

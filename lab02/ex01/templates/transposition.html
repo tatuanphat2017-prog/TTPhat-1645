@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transposition Cipher</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        h1 { text-align: center; font-weight: bold; }
+        h2 { color: #1a6bbf; font-size: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        label { display: block; margin: 10px 0 4px; }
+        input[type="text"] {
+            width: 100%; padding: 8px; box-sizing: border-box;
+            border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;
+        }
+        input[readonly] { background: #f0f0f0; }
+        button {
+            margin-top: 10px; padding: 8px 20px;
+            background: #1a6bbf; color: white;
+            border: none; border-radius: 4px;
+            font-size: 1rem; cursor: pointer;
+        }
+        button:hover { background: #155a9e; }
+        .section { margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <h1>TRANSPOSITION CIPHER</h1>
+
+    <div class="section">
+        <h2>ENCRYPTION</h2>
+        <label>Plain text:</label>
+        <input type="text" id="encryptPlain" placeholder="Input Plain Text">
+        <label>Key:</label>
+        <input type="text" id="encryptKey" placeholder="Input Key">
+        <button onclick="encryptTransposition()">Encrypt</button>
+        <label>Result:</label>
+        <input type="text" id="encryptResult" readonly placeholder="Encrypted text will appear here">
+    </div>
+
+    <div class="section">
+        <h2>DECRYPTION</h2>
+        <label>Cipher text:</label>
+        <input type="text" id="decryptCipher" placeholder="Input Cipher Text">
+        <label>Key:</label>
+        <input type="text" id="decryptKey" placeholder="Input Key">
+        <button onclick="decryptTransposition()">Decrypt</button>
+        <label>Result:</label>
+        <input type="text" id="decryptResult" readonly placeholder="Decrypted text will appear here">
+    </div>
+
+    <script>
+        function getOrder(key) {
+            let sorted = key.toUpperCase().split('').map((c, i) => [c, i]).sort((a, b) => a[0] < b[0] ? -1 : 1);
+            let order = new Array(key.length);
+            sorted.forEach((s, rank) => order[s[1]] = rank);
+            return order;
+        }
+        function transpositionEncrypt(text, key) {
+            if (!key) return 'Invalid key';
+            let cols = key.length;
+            let rows = Math.ceil(text.length / cols);
+            let padded = text.padEnd(rows * cols, 'X');
+            let order = getOrder(key);
+            let result = '';
+            let sorted = order.map((rank, col) => [rank, col]).sort((a, b) => a[0] - b[0]);
+            for (let [, col] of sorted)
+                for (let row = 0; row < rows; row++)
+                    result += padded[row * cols + col];
+            return result;
+        }
+        function transpositionDecrypt(text, key) {
+            if (!key) return 'Invalid key';
+            let cols = key.length;
+            let rows = Math.ceil(text.length / cols);
+            let order = getOrder(key);
+            let sorted = order.map((rank, col) => [rank, col]).sort((a, b) => a[0] - b[0]);
+            let grid = Array.from({length: rows}, () => new Array(cols));
+            let idx = 0;
+            for (let [, col] of sorted)
+                for (let row = 0; row < rows; row++)
+                    grid[row][col] = text[idx++];
+            return grid.map(r => r.join('')).join('').trimEnd();
+        }
+        function encryptTransposition() {
+            const plain = document.getElementById('encryptPlain').value;
+            const key = document.getElementById('encryptKey').value;
+            document.getElementById('encryptResult').value = transpositionEncrypt(plain, key);
+        }
+        function decryptTransposition() {
+            const cipher = document.getElementById('decryptCipher').value;
+            const key = document.getElementById('decryptKey').value;
+            document.getElementById('decryptResult').value = transpositionDecrypt(cipher, key);
+        }
+    </script>
+</body>
+</html>

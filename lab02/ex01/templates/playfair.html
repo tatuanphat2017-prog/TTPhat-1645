@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Playfair Cipher</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        h1 { text-align: center; font-weight: bold; }
+        h2 { color: #1a6bbf; font-size: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        label { display: block; margin: 10px 0 4px; }
+        input[type="text"] {
+            width: 100%; padding: 8px; box-sizing: border-box;
+            border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;
+        }
+        input[readonly] { background: #f0f0f0; }
+        button {
+            margin-top: 10px; padding: 8px 20px;
+            background: #1a6bbf; color: white;
+            border: none; border-radius: 4px;
+            font-size: 1rem; cursor: pointer;
+        }
+        button:hover { background: #155a9e; }
+        .section { margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <h1>PLAYFAIR CIPHER</h1>
+
+    <div class="section">
+        <h2>ENCRYPTION</h2>
+        <label>Plain text:</label>
+        <input type="text" id="encryptPlain" placeholder="Input Plain Text">
+        <label>Key:</label>
+        <input type="text" id="encryptKey" placeholder="Input Key">
+        <button onclick="encryptPlayfair()">Encrypt</button>
+        <label>Result:</label>
+        <input type="text" id="encryptResult" readonly placeholder="Encrypted text will appear here">
+    </div>
+
+    <div class="section">
+        <h2>DECRYPTION</h2>
+        <label>Cipher text:</label>
+        <input type="text" id="decryptCipher" placeholder="Input Cipher Text">
+        <label>Key:</label>
+        <input type="text" id="decryptKey" placeholder="Input Key">
+        <button onclick="decryptPlayfair()">Decrypt</button>
+        <label>Result:</label>
+        <input type="text" id="decryptResult" readonly placeholder="Decrypted text will appear here">
+    </div>
+
+    <script>
+        function buildMatrix(key) {
+            key = key.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+            let seen = {}, matrix = [];
+            for (let c of key + 'ABCDEFGHIKLMNOPQRSTUVWXYZ')
+                if (!seen[c]) { seen[c] = true; matrix.push(c); }
+            return matrix;
+        }
+        function prepareText(text) {
+            text = text.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                result += text[i];
+                if (i + 1 < text.length && text[i] === text[i + 1]) result += 'X';
+            }
+            if (result.length % 2 !== 0) result += 'X';
+            return result;
+        }
+        function playfair(text, key, encrypt) {
+            if (!key) return 'Invalid key';
+            let matrix = buildMatrix(key);
+            let prepared = prepareText(text);
+            let result = '';
+            let d = encrypt ? 1 : -1;
+            for (let i = 0; i < prepared.length; i += 2) {
+                let a = matrix.indexOf(prepared[i]);
+                let b = matrix.indexOf(prepared[i + 1]);
+                let ar = Math.floor(a / 5), ac = a % 5;
+                let br = Math.floor(b / 5), bc = b % 5;
+                if (ar === br) {
+                    result += matrix[ar * 5 + (ac + d + 5) % 5];
+                    result += matrix[br * 5 + (bc + d + 5) % 5];
+                } else if (ac === bc) {
+                    result += matrix[((ar + d + 5) % 5) * 5 + ac];
+                    result += matrix[((br + d + 5) % 5) * 5 + bc];
+                } else {
+                    result += matrix[ar * 5 + bc];
+                    result += matrix[br * 5 + ac];
+                }
+            }
+            return result;
+        }
+        function encryptPlayfair() {
+            const plain = document.getElementById('encryptPlain').value;
+            const key = document.getElementById('encryptKey').value;
+            document.getElementById('encryptResult').value = playfair(plain, key, true);
+        }
+        function decryptPlayfair() {
+            const cipher = document.getElementById('decryptCipher').value;
+            const key = document.getElementById('decryptKey').value;
+            document.getElementById('decryptResult').value = playfair(cipher, key, false);
+        }
+    </script>
+</body>
+</html>

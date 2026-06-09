@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AES-RSA Secure Chat</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
+    .topbar { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: #16213e; border-bottom: 2px solid #0f3460; flex-shrink: 0; }
+    .topbar-logo { font-size: 24px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: #e94560; }
+    .topbar-sub { font-size: 11px; color: #666; margin-top: 1px; }
+    .topbar-badge { margin-left: auto; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #2a1a1a; color: #e94560; border: 1px solid #e9456033; }
+    .topbar-badge.ok { background: #1a2a1a; color: #4caf50; border-color: #4caf5033; }
+    .steps-bar { display: flex; align-items: center; gap: 4px; padding: 6px 20px; background: #0d1117; border-bottom: 1px solid #16213e; overflow-x: auto; flex-shrink: 0; }
+    .step { padding: 3px 10px; border-radius: 10px; font-size: 11px; white-space: nowrap; background: #16213e; color: #444; }
+    .step.active { background: #0f3460; color: #7eb8f7; }
+    .step.done { background: #0d2010; color: #4caf50; }
+    .step-arrow { color: #333; font-size: 12px; }
+    #login-panel { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .card { background: #16213e; border: 1px solid #0f3460; border-radius: 14px; padding: 36px 40px; width: 400px; text-align: center; box-shadow: 0 8px 32px #00000066; }
+    .card h2 { color: #e94560; margin-bottom: 6px; }
+    .card p { color: #555; font-size: 13px; margin-bottom: 24px; }
+    .flow-box { background: #0d1117; border-radius: 8px; padding: 12px 16px; text-align: left; font-size: 12px; color: #555; line-height: 2; margin-bottom: 20px; }
+    .flow-box .hl { color: #7eb8f7; }
+    input[type=text] { width: 100%; padding: 11px 14px; background: #0d1117; border: 1px solid #0f3460; border-radius: 8px; color: #e0e0e0; font-size: 14px; outline: none; margin-bottom: 14px; }
+    input[type=text]:focus { border-color: #e94560; }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, #e94560, #c73652); color: #fff; }
+    .btn:hover { opacity: .85; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .log-box { margin-top: 14px; background: #0d1117; border-radius: 8px; padding: 10px 12px; font-size: 11px; font-family: monospace; color: #444; text-align: left; min-height: 80px; max-height: 120px; overflow-y: auto; line-height: 1.8; }
+    .log-box .ok { color: #4caf50; }
+    .log-box .err { color: #e94560; }
+    .log-box .inf { color: #7eb8f7; }
+    #chat-panel { flex: 1; display: none; flex-direction: column; min-height: 0; }
+    .messages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
+    .bubble-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .bubble-wrap.me { align-items: flex-end; }
+    .bubble-wrap.other { align-items: flex-start; }
+    .bubble-name { font-size: 11px; color: #444; padding: 0 6px; }
+    .bubble { max-width: 60%; padding: 9px 13px 7px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+    .bubble-wrap.me .bubble { background: #0f3460; color: #c5deff; border-bottom-right-radius: 3px; }
+    .bubble-wrap.other .bubble { background: #16213e; color: #e0e0e0; border-bottom-left-radius: 3px; }
+    .bubble-enc { font-size: 10px; color: #1e3a5a; font-family: monospace; margin-top: 5px; }
+    .sys-msg { align-self: center; font-size: 12px; color: #444; background: #0d1117; padding: 3px 12px; border-radius: 10px; }
+    .sys-msg.ok { color: #4caf50; background: #0d2010; }
+    .input-bar { display: flex; gap: 8px; align-items: center; padding: 12px 20px; background: #0d1117; border-top: 1px solid #16213e; flex-shrink: 0; }
+    .input-bar span { font-size: 18px; }
+    .input-bar input { flex: 1; padding: 10px 14px; background: #16213e; border: 1px solid #0f3460; border-radius: 20px; color: #e0e0e0; font-size: 14px; outline: none; margin: 0; }
+    .input-bar input:focus { border-color: #e94560; }
+    .btn-send { padding: 10px 20px; background: linear-gradient(135deg, #e94560, #c73652); border: none; border-radius: 20px; color: #fff; font-weight: 700; cursor: pointer; font-size: 14px; }
+    .btn-send:hover { opacity: .85; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">🔐</div>
+  <div>
+    <div class="topbar-title">AES-RSA Secure Chat</div>
+    <div class="topbar-sub">RSA-2048 Key Exchange · AES-128-CBC Encryption</div>
+  </div>
+  <div class="topbar-badge" id="badge">Chua ket noi</div>
+</div>
+
+<div class="steps-bar">
+  <div class="step" id="s1">1. Server gui RSA Public Key</div>
+  <span class="step-arrow">></span>
+  <div class="step" id="s2">2. Client tao AES key</div>
+  <span class="step-arrow">></span>
+  <div class="step" id="s3">3. Ma hoa AES key bang RSA</div>
+  <span class="step-arrow">></span>
+  <div class="step" id="s4">4. Server giai ma AES key</div>
+  <span class="step-arrow">></span>
+  <div class="step" id="s5">5. Chat ma hoa AES-128-CBC</div>
+</div>
+
+<div id="login-panel">
+  <div class="card">
+    <h2>🔐 Tham gia Secure Chat</h2>
+    <p>RSA-2048 Key Exchange + AES-128-CBC</p>
+    <div class="flow-box">
+      <span class="hl">server_key</span> = RSA.generate(2048)<br>
+      <span class="hl">aes_key</span> = get_random_bytes(16)<br>
+      <span class="hl">encrypted_aes</span> = RSA_encrypt(aes_key)<br>
+      Chat: <span class="hl">AES.new(key, MODE_CBC)</span>
+    </div>
+    <input type="text" id="inp-name" placeholder="Nhap ten cua ban..."
+           onkeypress="if(event.key==='Enter') joinChat()"/>
+    <button class="btn" id="btn-join" onclick="joinChat()" disabled>
+      Ket noi &amp; Trao doi Key
+    </button>
+    <div class="log-box" id="log-box">Dang ket noi server...</div>
+  </div>
+</div>
+
+<div id="chat-panel">
+  <div class="messages" id="messages"></div>
+  <div class="input-bar">
+    <span>🔒</span>
+    <input type="text" id="inp-msg"
+           placeholder="Nhap tin nhan (ma hoa AES-128-CBC)..."
+           onkeypress="if(event.key==='Enter') sendMsg()"/>
+    <button class="btn-send" onclick="sendMsg()">Gui</button>
+  </div>
+</div>
+
+<script>
+const socket = io();
+let serverRSAPub = null;
+let myAESKey     = null;
+let myAESRaw     = null;
+let myUsername   = '';
+
+function step(n, s) { document.getElementById('s'+n).className = 'step ' + s; }
+function log(msg, cls) {
+  const el = document.getElementById('log-box');
+  el.innerHTML += '<span class="' + (cls||'') + '">' + msg + '</span>\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+socket.on('connect', () => {
+  log('[+] Da ket noi Socket.IO', 'ok');
+});
+
+socket.on('server_public_key', data => {
+  serverRSAPub = data.public_key;
+  step(1, 'done');
+  log('[+] Da nhan RSA Public Key tu server', 'ok');
+  document.getElementById('btn-join').disabled = false;
+  document.getElementById('badge').textContent = 'San sang';
+});
+
+socket.on('key_received_ok', () => {
+  step(4, 'done');
+  step(5, 'active');
+  log('[+] Server da nhan AES key thanh cong!', 'ok');
+  log('[+] Ket noi bao mat thiet lap!', 'ok');
+  document.getElementById('badge').textContent = 'Da ket noi an toan';
+  document.getElementById('badge').classList.add('ok');
+  showChat();
+  addSys('Xin chao ' + myUsername + '! Chat da duoc ma hoa AES-128-CBC.', 'ok');
+});
+
+socket.on('chat_message', data => {
+  addBubble(data.from, data.plain, data.enc_preview, data.is_mine);
+});
+socket.on('system_msg', data => addSys(data.text));
+socket.on('error_msg',  data => { log('[-] ' + data.text, 'err'); });
+socket.on('disconnect', () => {
+  document.getElementById('badge').textContent = 'Mat ket noi';
+  document.getElementById('badge').classList.remove('ok');
+});
+
+async function joinChat() {
+  const name = document.getElementById('inp-name').value.trim();
+  if (!name || !serverRSAPub) return;
+  myUsername = name;
+  document.getElementById('btn-join').disabled = true;
+  step(2, 'active');
+  log('[*] Dang tao AES-128 key...', 'inf');
+
+  // Tao AES key 16 bytes ngau nhien
+  myAESRaw = crypto.getRandomValues(new Uint8Array(16));
+  myAESKey = await crypto.subtle.importKey(
+    'raw', myAESRaw, { name: 'AES-CBC' }, false, ['encrypt', 'decrypt']
+  );
+  log('[+] AES key: ' + Array.from(myAESRaw).map(b=>b.toString(16).padStart(2,'0')).join('').substring(0,16) + '...', 'ok');
+  step(2, 'done');
+  step(3, 'active');
+
+  // Chuyen 16 bytes -> hex string (tranh mat null bytes khi dung binary string)
+  const aesKeyHex = Array.from(myAESRaw, b => b.toString(16).padStart(2,'0')).join('');
+
+  // Ma hoa hex string bang RSA public key cua server
+  const encryptor = new JSEncrypt();
+  encryptor.setPublicKey(serverRSAPub);
+  const encryptedB64 = encryptor.encrypt(aesKeyHex);
+
+  if (!encryptedB64) {
+    log('[-] Ma hoa RSA that bai!', 'err');
+    document.getElementById('btn-join').disabled = false;
+    return;
+  }
+
+  log('[+] Da ma hoa AES key bang RSA. Gui len server...', 'ok');
+  step(3, 'done');
+  step(4, 'active');
+
+  socket.emit('client_aes_key', {
+    encrypted_aes_key: encryptedB64,
+    username: myUsername
+  });
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('inp-msg');
+  const txt = inp.value.trim();
+  if (!txt || !myAESKey) return;
+  inp.value = '';
+
+  const iv  = crypto.getRandomValues(new Uint8Array(16));
+  const enc = await crypto.subtle.encrypt(
+    { name: 'AES-CBC', iv }, myAESKey,
+    new TextEncoder().encode(txt)
+  );
+  const combined = new Uint8Array(16 + enc.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(enc), 16);
+  socket.emit('chat_message', {
+    encrypted_msg: btoa(String.fromCharCode(...combined))
+  });
+}
+
+function showChat() {
+  document.getElementById('login-panel').style.display = 'none';
+  document.getElementById('chat-panel').style.display = 'flex';
+  document.getElementById('inp-msg').focus();
+}
+function addBubble(from, plain, encPrev, isMe) {
+  const msgs = document.getElementById('messages');
+  const w = document.createElement('div');
+  w.className = 'bubble-wrap ' + (isMe ? 'me' : 'other');
+  w.innerHTML = '<div class="bubble-name">' + (isMe ? 'Ban' : esc(from)) + '</div>'
+    + '<div class="bubble">' + esc(plain)
+    + '<div class="bubble-enc">AES-CBC: ' + esc(encPrev) + '</div></div>';
+  msgs.appendChild(w);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function addSys(text, cls) {
+  const msgs = document.getElementById('messages');
+  const d = document.createElement('div');
+  d.className = 'sys-msg ' + (cls||'');
+  d.textContent = text;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

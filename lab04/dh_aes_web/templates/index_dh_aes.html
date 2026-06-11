@@ -7,265 +7,409 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0b0f1a; color: #dde3f0; height: 100vh; display: flex; flex-direction: column; }
-    .topbar { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: #0d1b2a; border-bottom: 2px solid #1b3a5c; flex-shrink: 0; }
-    .topbar-logo { font-size: 24px; }
-    .topbar-title { font-size: 18px; font-weight: 700; color: #38d9a9; }
-    .topbar-sub { font-size: 11px; color: #446; margin-top: 1px; }
-    .topbar-badge { margin-left: auto; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #1a1a2a; color: #f66; border: 1px solid #444; }
-    .topbar-badge.ok { background: #0d2a1e; color: #38d9a9; border-color: #38d9a933; }
-    .steps-bar { display: flex; align-items: center; gap: 4px; padding: 6px 20px; background: #060b14; border-bottom: 1px solid #0d1b2a; overflow-x: auto; flex-shrink: 0; }
-    .step { padding: 3px 10px; border-radius: 10px; font-size: 11px; white-space: nowrap; background: #0d1b2a; color: #334; }
-    .step.active { background: #0d3a2a; color: #38d9a9; }
-    .step.done { background: #0a2a1e; color: #2ab88a; }
-    .step-arrow { color: #224; font-size: 12px; }
-    #login-panel { flex: 1; display: flex; align-items: center; justify-content: center; }
-    .card { background: #0d1b2a; border: 1px solid #1b3a5c; border-radius: 14px; padding: 36px 40px; width: 420px; text-align: center; box-shadow: 0 8px 32px #00000077; }
-    .card h2 { color: #38d9a9; margin-bottom: 6px; }
-    .card p { color: #446; font-size: 13px; margin-bottom: 20px; }
-    .flow-box { background: #060b14; border-radius: 8px; padding: 12px 16px; text-align: left; font-size: 12px; color: #446; line-height: 2; margin-bottom: 20px; }
-    .flow-box .hl { color: #38d9a9; }
-    .flow-box .math { color: #7eb8f7; font-family: monospace; }
-    input[type=text] { width: 100%; padding: 11px 14px; background: #060b14; border: 1px solid #1b3a5c; border-radius: 8px; color: #dde3f0; font-size: 14px; outline: none; margin-bottom: 14px; }
-    input[type=text]:focus { border-color: #38d9a9; }
-    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, #38d9a9, #20c997); color: #0b0f1a; }
-    .btn:hover { opacity: .85; }
-    .btn:disabled { opacity: .4; cursor: not-allowed; }
-    .log-box { margin-top: 14px; background: #060b14; border-radius: 8px; padding: 10px 12px; font-size: 11px; font-family: monospace; color: #335; text-align: left; min-height: 90px; max-height: 130px; overflow-y: auto; line-height: 1.8; }
-    .log-box .ok { color: #38d9a9; }
-    .log-box .err { color: #f66; }
-    .log-box .inf { color: #7eb8f7; }
-    #chat-panel { flex: 1; display: none; flex-direction: column; min-height: 0; }
-    .messages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fafafa; color: #262626;
+      height: 100vh; display: flex; flex-direction: column;
+    }
+    .topbar {
+      height: 60px; background: #fff; border-bottom: 1px solid #dbdbdb;
+      display: flex; align-items: center; padding: 0 20px; gap: 12px; flex-shrink: 0;
+    }
+    .topbar-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .topbar-title { font-size: 15px; font-weight: 700; color: #262626; }
+    .topbar-sub { font-size: 11px; color: #8e8e8e; }
+    .topbar-badge {
+      margin-left: auto; padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;
+    }
+    .topbar-badge.ok { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+    .steps-bar {
+      display: flex; align-items: center; gap: 4px;
+      padding: 6px 20px; background: #fff;
+      border-bottom: 1px solid #dbdbdb; overflow-x: auto; flex-shrink: 0;
+    }
+    .step { padding: 3px 10px; border-radius: 10px; font-size: 11px; white-space: nowrap; background: #fafafa; color: #c7c7c7; border: 1px solid #efefef; }
+    .step.active { background: #fdf0f8; color: #c13584; border-color: #f0a0d0; }
+    .step.done { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+    .step-arrow { color: #dbdbdb; font-size: 12px; }
+    #login-panel {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      gap: 32px; padding: 40px 20px; background: #fafafa;
+    }
+    .phone-mockup {
+      width: 260px; height: 520px; border: 2px solid #dbdbdb; border-radius: 36px;
+      background: #fff; padding: 20px 14px 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: 0 0 0 8px #fafafa, 0 0 0 9px #dbdbdb;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .phone-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 8px; border-bottom: 1px solid #efefef;
+    }
+    .phone-app-name { font-size: 16px; font-weight: 700; color: #262626; }
+    .stories-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+    .story-ring {
+      width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #bc1888;
+    }
+    .phone-post { border: 1px solid #efefef; border-radius: 4px; overflow: hidden; }
+    .post-header { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
+    .post-av { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(45deg,#f09433,#bc1888); flex-shrink: 0; }
+    .post-uname { font-size: 11px; font-weight: 600; color: #262626; }
+    .post-img { width: 100%; height: 90px; background: linear-gradient(135deg,#fdf0f8,#e8f8f5); display:flex; align-items:center; justify-content:center; font-size:26px; }
+    .post-actions { padding: 6px 8px; font-size: 15px; display: flex; gap: 10px; }
+    .post-meta { padding: 0 8px 6px; font-size: 10px; color: #262626; line-height: 1.5; }
+    @media (max-width: 800px) { .phone-mockup { display: none; } }
+    .login-forms { display: flex; flex-direction: column; gap: 10px; width: 350px; }
+    .card { background: #fff; border: 1px solid #dbdbdb; border-radius: 4px; padding: 28px 32px; }
+    .card-icon-top { text-align: center; font-size: 40px; margin-bottom: 16px; }
+    .flow-box {
+      background: #fafafa; border: 1px solid #efefef; border-radius: 4px;
+      padding: 10px 14px; font-size: 11px; font-family: monospace;
+      color: #8e8e8e; line-height: 2; margin-bottom: 16px;
+    }
+    .flow-box .hl { color: #c13584; font-weight: 600; }
+    .flow-box .math { color: #0095f6; }
+    input[type=text] {
+      width: 100%; padding: 10px 12px;
+      background: #fafafa; border: 1px solid #dbdbdb; border-radius: 4px;
+      color: #262626; font-size: 14px; outline: none; margin-bottom: 8px;
+    }
+    input[type=text]::placeholder { color: #8e8e8e; font-size: 12px; }
+    input[type=text]:focus { border-color: #a8a8a8; background: #fff; }
+    .btn {
+      width: 100%; padding: 10px; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      background: linear-gradient(90deg, #833ab4, #fd1d1d, #fcb045); color: #fff;
+    }
+    .btn:hover { opacity: .9; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .or-line { display: flex; align-items: center; gap: 12px; margin: 14px 0; font-size: 13px; color: #8e8e8e; font-weight: 600; }
+    .or-line::before, .or-line::after { content:''; flex:1; height:1px; background:#dbdbdb; }
+    .log-box {
+      background: #fafafa; border: 1px solid #efefef; border-radius: 4px;
+      padding: 10px 12px; font-size: 11px; font-family: monospace;
+      color: #c7c7c7; min-height: 70px; max-height: 100px; overflow-y: auto; line-height: 1.8;
+    }
+    .log-box .ok { color: #16a34a; }
+    .log-box .err { color: #ef4444; }
+    .log-box .inf { color: #0095f6; }
+    .bottom-note { background: #fff; border: 1px solid #dbdbdb; padding: 14px; text-align: center; font-size: 14px; color: #262626; }
+    #chat-panel { flex: 1; display: none; flex-direction: row; min-height: 0; background: #fff; }
+    .sidebar { width: 350px; border-right: 1px solid #dbdbdb; display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #efefef; }
+    .sidebar-username { font-size: 16px; font-weight: 700; color: #262626; flex: 1; }
+    .sidebar-tabs { display: flex; border-bottom: 1px solid #efefef; }
+    .tab-btn { flex: 1; padding: 12px; font-size: 14px; font-weight: 600; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: #8e8e8e; }
+    .tab-btn.active { color: #262626; border-bottom-color: #262626; }
+    .contact-list { overflow-y: auto; flex: 1; }
+    .contact-item { display: flex; align-items: center; gap: 12px; padding: 8px 16px; cursor: pointer; }
+    .contact-item:hover { background: #fafafa; }
+    .ig-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(45deg, #f09433, #bc1888);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: #fff; flex-shrink: 0;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #bc1888;
+    }
+    .contact-info { flex: 1; min-width: 0; }
+    .contact-name { font-size: 14px; font-weight: 600; color: #262626; }
+    .contact-last { font-size: 13px; color: #8e8e8e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-area { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+    .chat-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #efefef; flex-shrink: 0; }
+    .chat-header-name { font-size: 14px; font-weight: 700; color: #262626; }
+    .chat-header-sub { font-size: 13px; color: #8e8e8e; }
+    .header-icons { margin-left: auto; display: flex; gap: 16px; }
+    .hdr-btn { background: none; border: none; cursor: pointer; font-size: 22px; color: #262626; }
+    .messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
     .messages::-webkit-scrollbar { width: 4px; }
-    .messages::-webkit-scrollbar-thumb { background: #1b3a5c; border-radius: 4px; }
+    .messages::-webkit-scrollbar-thumb { background: #dbdbdb; border-radius: 4px; }
     .bubble-wrap { display: flex; flex-direction: column; gap: 2px; }
     .bubble-wrap.me { align-items: flex-end; }
-    .bubble-wrap.other { align-items: flex-start; }
-    .bubble-name { font-size: 11px; color: #335; padding: 0 6px; }
-    .bubble { max-width: 60%; padding: 9px 13px 7px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
-    .bubble-wrap.me .bubble { background: #0d3a2a; color: #7fffd4; border-bottom-right-radius: 3px; }
-    .bubble-wrap.other .bubble { background: #0d1b2a; color: #dde3f0; border-bottom-left-radius: 3px; }
-    .bubble-enc { font-size: 10px; color: #152a1e; font-family: monospace; margin-top: 5px; }
-    .bubble-wrap.other .bubble-enc { color: #1b3040; }
-    .sys-msg { align-self: center; font-size: 12px; color: #334; background: #060b14; padding: 3px 12px; border-radius: 10px; }
-    .sys-msg.ok { color: #38d9a9; background: #0a2a1e; }
-    .info-bar { display: flex; gap: 16px; padding: 6px 20px; background: #060b14; border-top: 1px solid #0d1b2a; font-size: 11px; color: #334; flex-shrink: 0; }
-    .info-bar .val { color: #38d9a9; font-family: monospace; }
-    .input-bar { display: flex; gap: 8px; align-items: center; padding: 12px 20px; background: #060b14; border-top: 1px solid #0d1b2a; flex-shrink: 0; }
-    .input-bar span { font-size: 18px; }
-    .input-bar input { flex: 1; padding: 10px 14px; background: #0d1b2a; border: 1px solid #1b3a5c; border-radius: 20px; color: #dde3f0; font-size: 14px; outline: none; margin: 0; }
-    .input-bar input:focus { border-color: #38d9a9; }
-    .btn-send { padding: 10px 20px; background: linear-gradient(135deg, #38d9a9, #20c997); border: none; border-radius: 20px; color: #0b0f1a; font-weight: 700; cursor: pointer; font-size: 14px; }
-    .btn-send:hover { opacity: .85; }
+    .bubble-wrap.other { align-items: flex-start; flex-direction: row; gap: 8px; }
+    .bubble-wrap.other .bubble-col { display: flex; flex-direction: column; gap: 2px; }
+    .mini-av {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(45deg,#f09433,#bc1888);
+      color: #fff; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; align-self: flex-end;
+    }
+    .bubble { max-width: 260px; padding: 10px 14px; border-radius: 22px; font-size: 14px; line-height: 1.4; }
+    .bubble-wrap.me .bubble { background: linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045); color: #fff; border-bottom-right-radius: 6px; }
+    .bubble-wrap.other .bubble { background: #efefef; color: #262626; border-bottom-left-radius: 6px; }
+    .bubble-time { font-size: 11px; color: #c7c7c7; padding: 0 6px; }
+    .sys-msg { align-self: center; font-size: 12px; color: #8e8e8e; padding: 4px 0; }
+    .sys-msg.ok { color: #16a34a; }
+    .info-bar { display: flex; gap: 16px; padding: 6px 16px; background: #fafafa; border-top: 1px solid #efefef; font-size: 11px; color: #8e8e8e; flex-shrink: 0; }
+    .info-bar .val { color: #c13584; font-family: monospace; font-weight: 600; }
+    .input-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #fff; border-top: 1px solid #efefef; flex-shrink: 0; }
+    .ig-input-wrap { flex: 1; display: flex; align-items: center; border: 1px solid #dbdbdb; border-radius: 22px; padding: 8px 14px; gap: 8px; }
+    .ig-input-wrap input { flex: 1; border: none; outline: none; font-size: 14px; color: #262626; background: transparent; padding: 0; margin: 0; }
+    .ig-input-wrap input::placeholder { color: #8e8e8e; }
+    .ig-inline-btn { background: none; border: none; cursor: pointer; font-size: 20px; padding: 0; }
+    .send-btn-ig { background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 700; color: #0095f6; white-space: nowrap; }
+    .send-btn-ig:disabled { color: #c7c7c7; cursor: not-allowed; }
+    .side-btn-ig { background: none; border: none; cursor: pointer; font-size: 24px; color: #262626; }
+    @media (max-width: 700px) { .sidebar { display: none; } }
   </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">🔑</div>
+  <div class="topbar-icon">🔑</div>
   <div>
-    <div class="topbar-title">Diffie-Hellman AES Secure Chat</div>
-    <div class="topbar-sub">DH-2048 Key Exchange · AES-256-CBC · SHA-256 KDF</div>
+    <div class="topbar-title">DH-AES Secure Chat</div>
+    <div class="topbar-sub">DH-2048 · AES-256-CBC · SHA-256 KDF</div>
   </div>
-  <div class="topbar-badge" id="badge">Chua ket noi</div>
+  <div class="topbar-badge" id="badge">Chưa kết nối</div>
 </div>
 
 <div class="steps-bar">
-  <div class="step" id="s1">1. Server tao DH params</div>
-  <span class="step-arrow">></span>
-  <div class="step" id="s2">2. Server gui p, g, y</div>
-  <span class="step-arrow">></span>
-  <div class="step" id="s3">3. Client tao private key b</div>
-  <span class="step-arrow">></span>
-  <div class="step" id="s4">4. Client tinh B = g^b mod p</div>
-  <span class="step-arrow">></span>
-  <div class="step" id="s5">5. Gui B len server</div>
-  <span class="step-arrow">></span>
-  <div class="step" id="s6">6. Ca 2 tinh shared secret</div>
-  <span class="step-arrow">></span>
-  <div class="step" id="s7">7. AES key = SHA-256(secret)</div>
-  <span class="step-arrow">></span>
+  <div class="step" id="s1">1. Server tạo DH params</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="s2">2. Server gửi p, g, y</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="s3">3. Client tạo private b</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="s4">4. Client tính B = g^b mod p</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="s5">5. Gửi B lên server</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="s6">6. Tính shared secret</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="s7">7. AES key = SHA-256</div>
+  <span class="step-arrow">›</span>
   <div class="step" id="s8">8. Chat AES-256-CBC</div>
 </div>
 
 <div id="login-panel">
-  <div class="card">
-    <h2>🔑 DH-AES Secure Chat</h2>
-    <p>Trao doi khoa Diffie-Hellman (2048-bit)</p>
-    <div class="flow-box">
-      <span class="hl">server:</span> parameters = dh.generate_parameters(<span class="hl">generator=2, key_size=2048</span>)<br>
-      <span class="hl">client:</span> B = <span class="math">g^b mod p</span><br>
-      <span class="hl">shared:</span> s = <span class="math">B^a mod p = A^b mod p</span><br>
-      <span class="hl">AES key</span> = SHA-256(shared_secret)
+  <div class="phone-mockup">
+    <div class="phone-top">
+      <div class="phone-app-name">Secure DM</div>
+      <span style="font-size:20px;">✏️</span>
     </div>
-    <input type="text" id="inp-name" placeholder="Nhap ten cua ban..."
-           onkeypress="if(event.key==='Enter') joinChat()"/>
-    <button class="btn" id="btn-join" onclick="joinChat()" disabled>
-      Ket noi &amp; DH Key Exchange
-    </button>
-    <div class="log-box" id="log-box">Dang ket noi server...</div>
+    <div class="stories-row">
+      <div class="story-ring">🔑</div>
+      <div class="story-ring">🔐</div>
+      <div class="story-ring">🛡️</div>
+      <div class="story-ring">🔒</div>
+    </div>
+    <div class="phone-post">
+      <div class="post-header">
+        <div class="post-av"></div>
+        <div class="post-uname">dh_secure</div>
+      </div>
+      <div class="post-img">🔑</div>
+      <div class="post-actions">❤️ 💬 📤</div>
+      <div class="post-meta"><b>2,048 lượt thích</b><br>g^ab ≡ g^ba (mod p)</div>
+    </div>
+    <div class="phone-post">
+      <div class="post-header">
+        <div class="post-av"></div>
+        <div class="post-uname">aes_chat</div>
+      </div>
+      <div class="post-img">🛡️</div>
+      <div class="post-actions">❤️ 💬 📤</div>
+      <div class="post-meta"><b>256 lượt thích</b><br>AES-256-CBC đang bảo vệ mọi tin nhắn ✅</div>
+    </div>
+  </div>
+
+  <div class="login-forms">
+    <div class="card">
+      <div class="card-icon-top">🔑</div>
+      <div class="flow-box">
+        <span class="hl">server:</span> dh.generate_parameters(generator=2, key_size=<span class="hl">2048</span>)<br>
+        <span class="hl">client:</span> B = <span class="math">g^b mod p</span><br>
+        <span class="hl">shared:</span> s = <span class="math">B^a mod p</span><br>
+        <span class="hl">AES key</span> = SHA-256(shared_secret)
+      </div>
+      <input type="text" id="inp-name" placeholder="Tên người dùng"
+             onkeypress="if(event.key==='Enter') joinChat()"/>
+      <button class="btn" id="btn-join" onclick="joinChat()" disabled>Kết nối &amp; DH Key Exchange</button>
+      <div class="or-line">HOẶC</div>
+      <div class="log-box" id="log-box">Đang kết nối server...</div>
+    </div>
+    <div class="bottom-note">Trao đổi khoá an toàn với <b>Diffie-Hellman 2048-bit</b></div>
   </div>
 </div>
 
 <div id="chat-panel">
-  <div class="messages" id="messages"></div>
-  <div class="info-bar">
-    DH: <span class="val">2048-bit</span>
-    &nbsp;|&nbsp; Cipher: <span class="val">AES-256-CBC</span>
-    &nbsp;|&nbsp; KDF: <span class="val">SHA-256</span>
-    &nbsp;|&nbsp; Key: <span class="val" id="key-disp">-</span>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-username" id="my-username">—</div>
+      <span style="font-size:22px;">✏️</span>
+    </div>
+    <div class="sidebar-tabs">
+      <button class="tab-btn active">Tin nhắn</button>
+      <button class="tab-btn">Yêu cầu</button>
+    </div>
+    <div class="contact-list">
+      <div class="contact-item">
+        <div class="ig-avatar" id="sidebar-avatar">?</div>
+        <div class="contact-info">
+          <div class="contact-name" id="sidebar-name">—</div>
+          <div class="contact-last" id="sidebar-last">AES-256-CBC · Đã mã hoá</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="input-bar">
-    <span>🔒</span>
-    <input type="text" id="inp-msg"
-           placeholder="Nhap tin nhan (ma hoa AES-256-CBC)..."
-           onkeypress="if(event.key==='Enter') sendMsg()"/>
-    <button class="btn-send" onclick="sendMsg()">Gui</button>
+
+  <div class="chat-area">
+    <div class="chat-header">
+      <div class="ig-avatar" style="width:44px;height:44px;font-size:16px;box-shadow:none;" id="chat-avatar">?</div>
+      <div>
+        <div class="chat-header-name" id="chat-name">—</div>
+        <div class="chat-header-sub">Đang hoạt động</div>
+      </div>
+      <div class="header-icons">
+        <button class="hdr-btn">📞</button>
+        <button class="hdr-btn">📹</button>
+        <button class="hdr-btn">ℹ️</button>
+      </div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="info-bar">
+      DH: <span class="val">2048-bit</span>
+      &nbsp;|&nbsp; Cipher: <span class="val">AES-256-CBC</span>
+      &nbsp;|&nbsp; KDF: <span class="val">SHA-256</span>
+      &nbsp;|&nbsp; Key: <span class="val" id="key-disp">-</span>
+    </div>
+    <div class="input-bar">
+      <button class="side-btn-ig">📷</button>
+      <div class="ig-input-wrap">
+        <button class="ig-inline-btn">😊</button>
+        <input type="text" id="inp-msg" placeholder="Nhắn tin..."
+               onkeypress="if(event.key==='Enter') sendMsg()"/>
+        <button class="ig-inline-btn">🎤</button>
+        <button class="ig-inline-btn">🖼️</button>
+        <button class="ig-inline-btn">❤️</button>
+      </div>
+      <button class="send-btn-ig" onclick="sendMsg()">Gửi</button>
+    </div>
   </div>
 </div>
 
 <script>
-const socket = io();
-let dhP = null, dhG = null, serverY = null;
-let myAESKey  = null;
-let myUsername = '';
+const socket=io();
+let dhP=null,dhG=null,serverY=null,myAESKey=null,myUsername='';
 
-function step(n, s) { document.getElementById('s'+n).className = 'step ' + s; }
-function log(msg, cls) {
-  const el = document.getElementById('log-box');
-  el.innerHTML += '<span class="'+(cls||'')+'">' + msg + '</span>\n';
-  el.scrollTop = el.scrollHeight;
-}
+function step(n,s){document.getElementById('s'+n).className='step '+s;}
+function log(msg,cls){const el=document.getElementById('log-box');el.innerHTML+='<span class="'+(cls||'')+'">'+msg+'</span>\n';el.scrollTop=el.scrollHeight;}
 
-socket.on('connect', () => {
-  log('[+] Da ket noi Socket.IO', 'ok');
-  step(1, 'done');
+socket.on('connect',()=>{log('[+] Đã kết nối Socket.IO','ok');step(1,'done');});
+socket.on('disconnect',()=>{document.getElementById('badge').textContent='Mất kết nối';document.getElementById('badge').classList.remove('ok');});
+socket.on('dh_params',data=>{
+  dhP=BigInt(data.p);dhG=BigInt(data.g);serverY=BigInt(data.server_y);
+  step(2,'done');
+  log('[+] Đã nhận DH params: g='+data.g+', p='+data.p.substring(0,12)+'...','ok');
+  document.getElementById('btn-join').disabled=false;
+  document.getElementById('badge').textContent='Sẵn sàng trao đổi key';
 });
-
-socket.on('disconnect', () => {
-  document.getElementById('badge').textContent = 'Mat ket noi';
-  document.getElementById('badge').classList.remove('ok');
-});
-
-socket.on('dh_params', data => {
-  dhP     = BigInt(data.p);
-  dhG     = BigInt(data.g);
-  serverY = BigInt(data.server_y);
-  step(2, 'done');
-  log('[+] Da nhan DH params: g=' + data.g + ', p=' + data.p.substring(0,12) + '...', 'ok');
-  log('[+] Server public y = ' + data.server_y.substring(0,16) + '...', 'ok');
-  document.getElementById('btn-join').disabled = false;
-  document.getElementById('badge').textContent = 'San sang trao doi key';
-});
-
-socket.on('dh_success', data => {
-  step(6, 'done'); step(7, 'done'); step(8, 'active');
-  log('[+] Shared secret = ' + data.shared_preview, 'ok');
-  log('[+] AES-256 key   = ' + data.aes_key_preview, 'ok');
-  log('[+] Ket noi bao mat thiet lap!', 'ok');
-  document.getElementById('key-disp').textContent = data.aes_key_preview;
-  document.getElementById('badge').textContent = 'Da ket noi an toan';
+socket.on('dh_success',data=>{
+  step(6,'done');step(7,'done');step(8,'active');
+  log('[+] Shared secret = '+data.shared_preview,'ok');
+  log('[+] AES-256 key   = '+data.aes_key_preview,'ok');
+  document.getElementById('key-disp').textContent=data.aes_key_preview;
+  document.getElementById('badge').textContent='Đã kết nối an toàn';
   document.getElementById('badge').classList.add('ok');
   showChat();
-  addSys('DH Key Exchange hoan tat! Xin chao ' + myUsername + '!', 'ok');
+  addSys('DH Key Exchange hoàn tất! Xin chào '+myUsername+'! 🔐','ok');
 });
+socket.on('chat_message',data=>{
+  addBubble(data.from, data.plain, data.is_mine);
+  document.getElementById('sidebar-last').textContent=data.plain.substring(0,28)+(data.plain.length>28?'…':'');
+});
+socket.on('system_msg',data=>addSys(data.text));
+socket.on('error_msg',data=>{log('[-] '+data.text,'err');});
 
-socket.on('chat_message', data => addBubble(data.from, data.plain, data.enc_preview, data.is_mine));
-socket.on('system_msg',   data => addSys(data.text));
-socket.on('error_msg',    data => { log('[-] ' + data.text, 'err'); addSys('Loi: ' + data.text); });
-
-async function joinChat() {
-  const name = document.getElementById('inp-name').value.trim();
-  if (!name || !dhP) return;
-  myUsername = name;
-  document.getElementById('btn-join').disabled = true;
-
-  step(3, 'active');
-  log('[*] Dang tao private key b (256-bit)...', 'inf');
-
-  const privBytes = crypto.getRandomValues(new Uint8Array(32));
-  const b = BigInt('0x' + Array.from(privBytes, x => x.toString(16).padStart(2,'0')).join(''));
-
-  const B = modPow(dhG, b, dhP);
-  log('[+] Client private b = ' + b.toString(16).substring(0,16) + '...', 'ok');
-  log('[+] Client public  B = ' + B.toString(16).substring(0,16) + '...', 'ok');
-  step(3, 'done'); step(4, 'done');
-
-  const shared = modPow(serverY, b, dhP);
-  log('[+] Shared secret  = ' + shared.toString(16).substring(0,16) + '...', 'ok');
-  step(6, 'active');
-
-  const sharedHex = shared.toString(16);
-  const sharedPad = sharedHex.length % 2 ? '0' + sharedHex : sharedHex;
-  const sharedU8  = hexToU8(sharedPad);
-  const hashBuf   = await crypto.subtle.digest('SHA-256', sharedU8);
-  const aesRaw    = new Uint8Array(hashBuf);
-
-  myAESKey = await crypto.subtle.importKey(
-    'raw', aesRaw, { name: 'AES-CBC' }, false, ['encrypt','decrypt']
-  );
-  log('[+] AES-256 key = SHA-256(s) = ' + u8ToHex(aesRaw).substring(0,16) + '...', 'ok');
-  step(7, 'active');
-
-  step(5, 'active');
-  socket.emit('client_public_key', {
-    client_y: B.toString(),
-    username: myUsername
-  });
-  step(5, 'done');
-  log('[+] Da gui client public key B len server', 'ok');
+async function joinChat(){
+  const name=document.getElementById('inp-name').value.trim();
+  if(!name||!dhP)return;
+  myUsername=name;document.getElementById('btn-join').disabled=true;
+  step(3,'active');log('[*] Đang tạo private key b (256-bit)...','inf');
+  const privBytes=crypto.getRandomValues(new Uint8Array(32));
+  const b=BigInt('0x'+Array.from(privBytes,x=>x.toString(16).padStart(2,'0')).join(''));
+  const B=modPow(dhG,b,dhP);
+  log('[+] Client private b = '+b.toString(16).substring(0,16)+'...','ok');
+  log('[+] Client public  B = '+B.toString(16).substring(0,16)+'...','ok');
+  step(3,'done');step(4,'done');
+  const shared=modPow(serverY,b,dhP);
+  step(6,'active');
+  const sharedHex=shared.toString(16);
+  const sharedPad=sharedHex.length%2?'0'+sharedHex:sharedHex;
+  const sharedU8=hexToU8(sharedPad);
+  const hashBuf=await crypto.subtle.digest('SHA-256',sharedU8);
+  const aesRaw=new Uint8Array(hashBuf);
+  myAESKey=await crypto.subtle.importKey('raw',aesRaw,{name:'AES-CBC'},false,['encrypt','decrypt']);
+  log('[+] AES-256 key = SHA-256(s) = '+u8ToHex(aesRaw).substring(0,16)+'...','ok');
+  step(7,'active');step(5,'active');
+  socket.emit('client_public_key',{client_y:B.toString(),username:myUsername});
+  step(5,'done');
+  log('[+] Đã gửi client public key B lên server','ok');
 }
 
-async function sendMsg() {
-  const inp = document.getElementById('inp-msg');
-  const txt = inp.value.trim();
-  if (!txt || !myAESKey) return;
-  inp.value = '';
-  const iv  = crypto.getRandomValues(new Uint8Array(16));
-  const enc = await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, myAESKey, new TextEncoder().encode(txt));
-  const combined = new Uint8Array(16 + enc.byteLength);
-  combined.set(iv); combined.set(new Uint8Array(enc), 16);
-  socket.emit('chat_message', { encrypted_msg: btoa(String.fromCharCode(...combined)) });
+async function sendMsg(){
+  const inp=document.getElementById('inp-msg');
+  const txt=inp.value.trim();if(!txt||!myAESKey)return;inp.value='';
+  const iv=crypto.getRandomValues(new Uint8Array(16));
+  const enc=await crypto.subtle.encrypt({name:'AES-CBC',iv},myAESKey,new TextEncoder().encode(txt));
+  const combined=new Uint8Array(16+enc.byteLength);
+  combined.set(iv);combined.set(new Uint8Array(enc),16);
+  socket.emit('chat_message',{encrypted_msg:btoa(String.fromCharCode(...combined))});
 }
 
-function modPow(base, exp, mod) {
-  let result = 1n; base = base % mod;
-  while (exp > 0n) {
-    if (exp % 2n === 1n) result = result * base % mod;
-    exp >>= 1n; base = base * base % mod;
-  }
-  return result;
-}
-function hexToU8(hex) {
-  const a = new Uint8Array(hex.length/2);
-  for (let i=0;i<hex.length;i+=2) a[i/2]=parseInt(hex.substr(i,2),16);
-  return a;
-}
-function u8ToHex(u) { return [...u].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+function modPow(base,exp,mod){let r=1n;base=base%mod;while(exp>0n){if(exp%2n===1n)r=r*base%mod;exp>>=1n;base=base*base%mod;}return r;}
+function hexToU8(hex){const a=new Uint8Array(hex.length/2);for(let i=0;i<hex.length;i+=2)a[i/2]=parseInt(hex.substr(i,2),16);return a;}
+function u8ToHex(u){return[...u].map(b=>b.toString(16).padStart(2,'0')).join('');}
 
-function showChat() {
-  document.getElementById('login-panel').style.display = 'none';
-  document.getElementById('chat-panel').style.display = 'flex';
+function showChat(){
+  document.getElementById('login-panel').style.display='none';
+  document.getElementById('chat-panel').style.display='flex';
+  const ini=myUsername.substring(0,2).toUpperCase();
+  document.getElementById('my-username').textContent=myUsername;
+  document.getElementById('sidebar-avatar').textContent=ini;
+  document.getElementById('sidebar-name').textContent=myUsername;
+  document.getElementById('chat-avatar').textContent=ini;
+  document.getElementById('chat-name').textContent=myUsername;
   document.getElementById('inp-msg').focus();
 }
-function addBubble(from, plain, encPrev, isMe) {
-  const msgs = document.getElementById('messages');
-  const w = document.createElement('div');
-  w.className = 'bubble-wrap ' + (isMe ? 'me' : 'other');
-  w.innerHTML = '<div class="bubble-name">' + (isMe ? 'Ban' : esc(from)) + '</div>'
-    + '<div class="bubble">' + esc(plain)
-    + '<div class="bubble-enc">AES-256-CBC: ' + esc(encPrev) + '</div></div>';
-  msgs.appendChild(w); msgs.scrollTop = msgs.scrollHeight;
+
+function addBubble(from, plain, isMe){
+  const msgs=document.getElementById('messages');
+  const w=document.createElement('div');
+  const now=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  if(isMe){
+    w.className='bubble-wrap me';
+    w.innerHTML='<div class="bubble">'+esc(plain)+'</div>'
+      +'<div class="bubble-time">'+now+'</div>';
+  } else {
+    w.className='bubble-wrap other';
+    w.innerHTML='<div class="mini-av">'+esc(from.substring(0,2).toUpperCase())+'</div>'
+      +'<div class="bubble-col">'
+      +'<div class="bubble">'+esc(plain)+'</div>'
+      +'<div class="bubble-time">'+esc(from)+' · '+now+'</div>'
+      +'</div>';
+  }
+  msgs.appendChild(w);msgs.scrollTop=msgs.scrollHeight;
 }
-function addSys(text, cls) {
-  const msgs = document.getElementById('messages');
-  const d = document.createElement('div');
-  d.className = 'sys-msg ' + (cls||'');
-  d.textContent = text;
-  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+
+function addSys(text,cls){
+  const msgs=document.getElementById('messages');
+  const d=document.createElement('div');
+  d.className='sys-msg '+(cls||'');d.textContent=text;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
 }
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 </script>
 </body>
 </html>

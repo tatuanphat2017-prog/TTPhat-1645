@@ -55,7 +55,12 @@ def handle_client(client_socket, client_address):
     while True:
         encrypted_message = client_socket.recv(1024)
         decrypted_message = decrypt_message(aes_key, encrypted_message)
+
+        # Tính SHA-256 hash của tin nhắn
+        msg_hash = hashlib.sha256(decrypted_message.encode()).hexdigest()
+
         print(f"Received from {client_address}: {decrypted_message}")
+        print(f"SHA-256 hash: {msg_hash}")
 
         # Send received message to all other clients
         for client, key in clients:
